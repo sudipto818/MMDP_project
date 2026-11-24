@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which Screen Was It?</title>
+<meta name="description" content="Why do screen-photo detectors miss phone (OLED) screens, and when can a photo reveal what kind of screen it shows? A sampling-theory study (DA3021), as an interactive lesson.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%239b5de5'/%3E%3Cg fill='%23ff5a5a'%3E%3Crect x='6' y='7' width='5' height='18' rx='2'/%3E%3C/g%3E%3Cg fill='%2358cc02'%3E%3Crect x='13.5' y='7' width='5' height='18' rx='2'/%3E%3C/g%3E%3Cg fill='%231cb0f6'%3E%3Crect x='21' y='7' width='5' height='18' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+<script>document.documentElement.classList.add("js");</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="hero">
+  <span class="blob b1"></span><span class="blob b2"></span>
+  <div class="in">
+    <div>
+      <span class="tag">DA3021 · Multimodal Data Processing and Learning · IIT Guwahati</span>
+      <h1>Which Screen <span class="rgb"><span>Was</span> <span>It</span><span>?</span></span></h1>
+      <p class="sub">Why do screen-photo detectors miss phone (OLED) screens, and when can a photo of a screen reveal what kind of screen it shows? Answered with the sampling theorem, the convolution theorem and a simulated camera. Poke it, drag it, listen to it.</p>
+      <div class="cta">
+        <button class="primary big" id="startBtn">Start the lesson</button>
+        <button class="ghost big" id="heroSound" aria-pressed="false">Sound: off</button>
+      </div>
+    </div>
+    <div class="toy">
+      <canvas id="heroToy" aria-label="Two striped patterns overlapping to make a moiré pattern. Move the pointer over it to change the pattern."></canvas>
+      <div class="toycap">Move over the pattern. Two plain stripe grids, one wobbly new pattern: that is moiré.</div>
+    </div>
+  </div>
+</header>
+
+<nav class="top" aria-label="Lesson path">
+  <div class="bar">
+    <a class="brand" href="#top" aria-label="Which Screen Was It?"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#9b5de5"/><rect x="6" y="7" width="5" height="18" rx="2" fill="#ff5a5a"/><rect x="13.5" y="7" width="5" height="18" rx="2" fill="#58cc02"/><rect x="21" y="7" width="5" height="18" rx="2" fill="#1cb0f6"/></svg><span>Which Screen?</span></a>
+    <ul>
+      <li><a href="#ch1"><span class="node">1</span><span class="nl">The gap</span></a></li>
+      <li><a href="#ch2"><span class="node">2</span><span class="nl">Photograph a screen</span></a></li>
+      <li><a href="#ch3"><span class="node">3</span><span class="nl">Aliasing</span></a></li>
+      <li><a href="#ch4"><span class="node">4</span><span class="nl">Why phones hide</span></a></li>
+      <li><a href="#ch5"><span class="node">5</span><span class="nl">Which screen?</span></a></li>
+      <li><a href="#ch6"><span class="node">6</span><span class="nl">Defence &amp; limits</span></a></li>
+      <li><a href="#ch7"><span class="node">7</span><span class="nl">Real photos</span></a></li>
+    </ul>
+    <div class="hud">
+      <span class="pill streak" id="streakPill" title="Correct answers in a row">🔥 <b id="streakN">0</b></span>
+      <span class="pill xp" id="xpPill" title="Experience points">⭐ <b id="xpN">0</b> XP</span>
+      <button class="iconbtn" id="soundBtn" aria-label="Turn sound effects on" aria-pressed="false" title="Sound effects">🔇</button>
+      <button class="iconbtn" id="themeBtn" aria-label="Switch light or dark theme" title="Light / dark">🌓</button>
+    </div>
+  </div>
+  <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+</nav>
+
+<noscript><main><div class="warn"><b class="k">JavaScript needed</b>This page is interactive and needs JavaScript.</div></main></noscript>
+
+<main id="top">
+<!-- =============================================================== 1 -->
+<section class="chapter" id="ch1">
+  <div class="banner"><span class="num">1</span><div><span class="kick">Lesson 1 · The gap</span><h2>The fraud, and a gap I could not find explained</h2></div></div>
+  <p class="lead">In video-KYC and ID checks, a fraudster can hold a phone up to <b>a screen showing someone else's photo or ID</b>. Detectors look for the traces that second capture leaves behind. Trabelsi et&nbsp;al. (EURECOM) report that existing recapture datasets contain only LCD screens, that the traces are "much less present" on OLED screens, and that a detector with about 95% accuracy on LCD recaptures could not detect more than a third of their OLED recaptures. Their OLED photos show a 15-inch laptop OLED screen taken with phone front cameras (phone OLED screens appear in their test sets); the paper gives no pixel pitches or distances. I found no explanation based on sampling theory. This page tests one: <i>screens whose pixels are small compared with the camera's leave no lattice for the camera to alias.</i></p>
+  <div class="card">
+    <h3>Our question</h3>
+    <p style="margin:0"><b>Why do recapture traces vanish for phone OLED screens, and when can a photo of a screen reveal what kind of screen it was?</b></p>
+    <p class="small" style="margin:8px 0 0">Lessons 1 to 6 come from a simulated screen and camera; Lesson 7 checks them against 34 real photos. Built from course material: Fourier series, aliasing, convolution, Bayer sampling and demosaicing, 2-D Fourier transform, template matching and regression.</p>
+  </div>
+
+  <div class="grid3" id="statCards"></div>
+
+  <div class="card">
+    <h3>Challenge 1 · Which one is the photo of a screen?</h3>
+    <p class="small" style="margin-top:0">One of these is a photograph of a laptop screen showing the picture; the other is a photograph of the scene itself. Same camera, same exposure, same crop.</p>
+    <div class="figrow" id="guess" style="max-width:640px"></div>
+    <div class="btnrow"><button data-g="0">A is the screen</button><button data-g="1">B is the screen</button><button id="guessReveal">Show spectra</button><button class="blue" id="guessAgain" hidden>Try another</button></div>
+    <div id="guessMsg" class="small" style="min-height:2.6em"></div>
+    <div class="notice"><b class="k">What to notice</b>The two photos are almost indistinguishable to the eye. Their spectra are not: the screen leaves bright, isolated spots (moiré). Chapter 2 lets you make that happen yourself.</div>
+  </div>
+</section>
+
+<!-- =============================================================== 2 -->
+<section class="chapter" id="ch2">
+  <div class="banner"><span class="num">2</span><div><span class="kick">Lesson 2 · Play with the camera</span><h2>Photograph a screen</h2></div></div>
+  <p class="lead">A screen is a periodic lattice of coloured dots. The camera samples it on its own lattice, through a lens. This is a live port of the simulator used for all experiments (without noise and JPEG, to stay fast). Move the sliders; the circles on the spectrum are <b>predicted by theory</b>, not fitted.</p>
+  <div class="card">
+    <div class="stagewrap">
+      <canvas id="stage" aria-label="Drag the phone left or right to change the distance. The right panel shows how big one camera pixel is against the screen's pixels."></canvas>
+      <div class="small">Drag the phone along the track (or use the slider). On the right: the red square is what <b>one camera pixel</b> covers on the screen.</div>
+    </div>
+    <div class="controls">
+      <label>Screen
+        <select autocomplete="off" id="dev"><option value="laptop_lcd">Laptop LCD (141 ppi)</option><option value="monitor_lcd">Monitor LCD (92 ppi)</option><option value="phone_oled">Phone OLED (460 ppi)</option><option value="custom">Custom (set r directly)</option></select></label>
+      <label id="lblCam">Phone camera pixels
+        <select autocomplete="off" id="cam"><option value="binned">binned, 2.0 µm</option><option value="full">full resolution, 1.0 µm</option></select></label>
+      <label id="lblDist">Distance: <span class="v" id="vDist"></span>
+        <input autocomplete="off" type="range" id="dist" min="8" max="60" step="1" value="25"></label>
+      <label id="lblLay" style="display:none">Screen type
+        <select autocomplete="off" id="lay"><option value="lcd_rgb">LCD stripes</option><option value="pentile">OLED diamond PenTile</option></select></label>
+      <label id="lblR" style="display:none">r = camera pixel / screen pixel: <span class="v" id="vR"></span>
+        <input autocomplete="off" type="range" id="rr" min="0.2" max="2.4" step="0.01" value="0.5"></label>
+      <label>Camera angle: <span class="v" id="vTh"></span>
+        <input autocomplete="off" type="range" id="th" min="-6" max="6" step="0.5" value="2"></label>
+      <label>Lens blur σ: <span class="v" id="vSg"></span> camera px
+        <input autocomplete="off" type="range" id="sg" min="0.2" max="0.6" step="0.01" value="0.4"></label>
+      <label>Picture shown on the screen
+        <select autocomplete="off" id="scn"></select></label>
+      <label style="align-self:center"><input autocomplete="off" type="checkbox" id="peaks" checked> show predicted peaks</label>
+    </div>
+    <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))">
+      <div>
+        <div class="fig"><canvas id="cvSub" class="px" width="240" height="240"></canvas><div class="cap"><b>The screen itself</b> (12×12 pixels, zoomed): its subpixel layout</div></div>
+        <div class="readout card" style="margin-top:12px" id="readout"></div>
+      </div>
+      <div>
+        <div class="figrow" style="grid-template-columns:repeat(2,minmax(120px,1fr))">
+          <div class="fig"><canvas id="cvScr" class="px" width="128" height="128"></canvas><div class="cap"><b>Photo of the screen</b></div></div>
+          <div class="fig"><div class="stack probe" id="stackScr"><canvas id="cvSpecScr" class="px" width="128" height="128"></canvas><canvas id="ovScr" class="over" width="256" height="256"></canvas></div><div class="cap">its spectrum <b>(circles = predicted moiré)</b></div></div>
+          <div class="fig"><canvas id="cvDir" class="px" width="128" height="128"></canvas><div class="cap"><b>Photo of the real scene</b></div></div>
+          <div class="fig"><canvas id="cvSpecDir" class="px" width="128" height="128"></canvas><div class="cap">its spectrum (no lattice)</div></div>
+        </div>
+        <div class="hint" id="specHint">Hover or tap the screen photo's spectrum to find out what made each spot.</div>
+      </div>
+    </div>
+    <div class="btnrow"><button class="listen" id="hearMoire" aria-pressed="false">🔊 Hear the moiré</button></div>
+    <div class="small">Each bright spot becomes a tone: pitch follows its distance from the centre of the spectrum, loudness follows the predicted detection strength. When the lattice is erased, the sound fades to silence.</div>
+    <div class="try"><b class="k">Try this</b>Choose <i>Laptop LCD</i> and slide the distance from 8 to 60 cm: bright spots appear exactly inside the circles, then fade. Now choose <i>Phone OLED</i> at 25&nbsp;cm: the spectrum of the screen photo looks just like the real scene's. Switch the phone camera to <i>full resolution</i>, move closer, and the spots come back.</div>
+    <ul class="missions" id="m2">
+      <li data-m="m2a"><span class="chk">✓</span><span>Catch a laptop screen<small>Laptop LCD, and the verdict turns green (predicted AUC 0.9 or more).</small></span><span class="xpt">+10 XP</span></li>
+      <li data-m="m2b"><span class="chk">✓</span><span>Make the phone vanish<small>Phone OLED, binned camera, verdict red (predicted AUC under 0.6).</small></span><span class="xpt">+10 XP</span></li>
+      <li data-m="m2c"><span class="chk">✓</span><span>Bring the phone back from the dead<small>Phone OLED with the full-resolution camera and the verdict green.</small></span><span class="xpt">+15 XP</span></li>
+    </ul>
+    <div class="notice"><b class="k">What to notice</b>The spots move when you change distance or angle, and the circles follow them. Where a circle sits on an already-bright spot the theory is working; where the spectrum is plain, the lens has removed the lattice before the camera could sample it.</div>
+  </div>
+</section>
+
+<!-- =============================================================== 3 -->
+<section class="chapter" id="ch3">
+  <div class="banner"><span class="num">3</span><div><span class="kick">Lesson 3 · Theory you can hear</span><h2>The sampling theorem behind the moiré</h2></div></div>
+  <p class="lead">A screen's emission is periodic, so it is a Fourier series: a stack of harmonics at multiples of its pixel frequency. The camera samples it on a lattice <i>r</i> times coarser or finer, so each harmonic lands at</p>
+  <div class="eq">f_cam = r · R(−θ) · f_screen&nbsp;&nbsp;&nbsp;then folded into [−½, ½):&nbsp;&nbsp;fold(f) = ((f + ½) mod 1) − ½</div>
+  <p class="lead">Any harmonic beyond the camera's Nyquist limit (½ cycle per camera pixel) is copied back inside by aliasing: this is the spectrum-copies (Shah function) picture from the lectures, and it is the moiré.</p>
+  <div class="card">
+    <div class="controls">
+      <label>Screen type <select autocomplete="off" id="aLay"><option value="lcd_rgb">LCD stripes</option><option value="pentile">OLED PenTile</option></select></label>
+      <label>r: <span class="v" id="vAr"></span><input autocomplete="off" type="range" id="aR" min="0.2" max="1.6" step="0.01" value="0.62"></label>
+      <label>Lens blur σ: <span class="v" id="vAs"></span><input autocomplete="off" type="range" id="aS" min="0.2" max="0.6" step="0.01" value="0.3"></label>
+    </div>
+    <canvas id="cvAlias" class="chart"></canvas>
+    <div class="btnrow">
+      <button class="listen" id="hearEmit" aria-pressed="false">▶ Hear what the screen emits</button>
+      <button class="listen" id="hearCam" aria-pressed="false">▶ Hear what the camera records</button>
+    </div>
+    <div class="small">Pitch = 1000 Hz × frequency (cycles per camera pixel); loudness = harmonic amplitude. Drag <i>r</i> while a sound plays: past Nyquist the camera's version folds to a <b>lower</b> pitch, exactly like aliasing in audio.</div>
+    <div class="try"><b class="k">Try this</b>Raise <i>r</i>. Harmonics (grey stems before the lens, coloured after it) slide outward. Red stems are outside the green Nyquist band; the dashed orange stems show where aliasing folds them back inside. This is a 1-D cut along the screen's x-axis (θ&nbsp;=&nbsp;0).</div>
+    <div class="notice"><b class="k">What to notice</b>As <i>r</i> grows two things happen at once: harmonics move beyond Nyquist (more aliasing) <i>and</i> every stem gets shorter, because the lens response drops with frequency. By <i>r</i>&nbsp;≈&nbsp;1 almost nothing is left to alias.</div>
+    <div class="mc" id="p3"></div>
+  </div>
+</section>
+
+<!-- =============================================================== 4 -->
+<section class="chapter" id="ch4">
+  <div class="banner"><span class="num">4</span><div><span class="kick">Lesson 4 · The mystery solved (in simulation)</span><h2>Why phones hide</h2></div></div>
+  <p class="lead">The lens blurs with a Gaussian of width σ<sub>s</sub> (in screen pixels). By the convolution theorem that multiplies the spectrum by the Fourier transform of a Gaussian:</p>
+  <div class="eq">MTF(f) = exp(−2π² σ<sub>s</sub>² f²) &nbsp;&nbsp;with σ<sub>s</sub> = r · √(σ<sub>lens</sub>² + σ<sub>aperture</sub>²)</div>
+  <div class="card">
+    <div class="btnrow" id="devBtns"></div>
+    <div class="controls"><label>Distance: <span class="v" id="vD4"></span><input autocomplete="off" type="range" id="d4" min="10" max="60" step="1" value="25"></label>
+      <label>Phone camera pixels <select autocomplete="off" id="cam4"><option value="binned">binned, 2.0 µm</option><option value="full">full resolution, 1.0 µm</option></select></label></div>
+    <canvas id="cvMtf" class="chart short"></canvas>
+    <div id="mtfText" class="small"></div>
+    <div class="try"><b class="k">Try this</b>Switch between the laptop and the phone at the same distance. The phone's pixels are about 3 times smaller, so <i>r</i> is about 3 times larger and σ<sub>s</sub> too: the lattice frequencies (stems) fall to nearly zero on the MTF curve.</div>
+    <ul class="missions" id="m4">
+      <li data-m="m4a"><span class="chk">✓</span><span>Rescue the phone's lattice<small>Select Phone OLED and keep at least 50% of the f = 1 harmonic (hint: full-resolution pixels and move closer).</small></span><span class="xpt">+15 XP</span></li>
+    </ul>
+    <div class="mc" id="p4"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><h3>E1 · Realistic geometry: the OLED gap reproduced</h3>
+      <canvas id="cvE1" class="chart short"></canvas>
+      <p class="small" id="e1Text"></p></div>
+    <div class="card"><h3>E2/E7 · The control: same <i>r</i>, both screen types</h3>
+      <canvas id="cvE2" class="chart short"></canvas>
+      <p class="small" id="e2Text"></p></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>E3 · Does theory predict the detection curve?</h3>
+      <canvas id="cvE3" class="chart short"></canvas>
+      <p class="small" id="e3Text"></p></div>
+    <div class="card"><h3>E1 · Detection against distance, per device</h3>
+      <canvas id="cvE1d" class="chart short"></canvas>
+      <p class="small">AUC from the raw spectral-peak feature, no training. Phone at 15 cm is already at r ≈ 1.</p></div>
+  </div>
+  <div class="notice"><b class="k">What to notice</b>The control is the key result: at the <i>same</i> r an OLED-style layout is detected at least as well as an LCD, and an LCD-trained detector (dashed) transfers to it. So in this simulator the traces vanish because of geometry (pixels too small for the camera), not because of the OLED layout. Whether that explains the <i>published</i> gap depends on how small their screens' pixels were relative to their cameras'; the paper does not say. The curves do not overlap exactly: PenTile's red/blue checkerboard puts energy at a lower frequency, so it survives slightly longer.</div>
+</section>
+
+<!-- =============================================================== 5 -->
+<section class="chapter" id="ch5">
+  <div class="banner"><span class="num">5</span><div><span class="kick">Lesson 5 · Spot the layout</span><h2>Which screen was it?</h2></div></div>
+  <p class="lead">When the lattice survives, its geometry is a fingerprint. The LCD's stripes repeat once per pixel; PenTile's red/blue checkerboard adds a repeat every <i>two</i> pixels along the diagonal: <b>half-integer harmonics</b> at (±½, ±½) cycles per screen pixel. Those extra spots appear in the spectrum in places an LCD never puts one.</p>
+  <div class="card">
+    <div class="controls">
+      <label>Screen type <select autocomplete="off" id="xLay"><option value="lcd_rgb">LCD stripes</option><option value="pentile">OLED PenTile</option></select></label>
+      <label>r: <span class="v" id="vXr"></span><input autocomplete="off" type="range" id="xR" min="0" max="11" step="1" value="2"></label>
+    </div>
+    <div class="figrow" style="max-width:820px">
+      <div class="fig"><img id="xSub" class="px" alt="screen subpixels"><div class="cap"><b>The screen</b> (zoomed)</div></div>
+      <div class="fig"><img id="xRec" class="px" alt="photo of the screen"><div class="cap"><b>Photo of the screen</b></div></div>
+      <div class="fig"><div class="stack"><img id="xSpec" class="px" alt="spectrum"><canvas id="xOv" class="over" width="256" height="256"></canvas></div><div class="cap">spectrum + predicted peaks</div></div>
+    </div>
+    <div id="xText" class="small" style="margin-top:8px"></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>E4 · Accuracy of telling LCD from PenTile</h3><canvas id="cvE4" class="chart short"></canvas><p class="small" id="e4Text"></p></div>
+    <div class="card"><h3>Quiz · LCD or PenTile?</h3>
+      <div id="qProg" class="small" style="text-align:center;margin-bottom:6px"></div>
+      <img id="qImg" class="quiz-img" alt="spectrum to classify">
+      <div class="btnrow" style="justify-content:center"><button data-q="lcd_rgb">LCD stripes</button><button data-q="pentile">OLED PenTile</button><button id="qNext">Skip</button></div>
+      <div id="qMsg" class="small" style="text-align:center;min-height:3em"></div></div>
+  </div>
+</section>
+
+<!-- =============================================================== 6 -->
+<section class="chapter" id="ch6">
+  <div class="banner"><span class="num">6</span><div><span class="kick">Lesson 6 · Use it, then doubt it</span><h2>The defence rule, robustness and limits</h2></div></div>
+  <p class="lead">If detection needs <i>r</i> below about the threshold <i>r</i><sub>90</sub>, the capture rule for a verification app follows from the geometry: <code>d<sub>max</sub> = f + r<sub>90</sub> · pitch · f / pixel</code>. Use the full-resolution camera mode and move closer.</p>
+  <div class="card">
+    <h3>Try the rule: how close must the camera be?</h3>
+    <div class="controls">
+      <label>Screen being photographed <select autocomplete="off" id="gDev"></select></label>
+      <label>Phone camera pixels <select autocomplete="off" id="gCam"><option value="binned">binned, 2.0 µm</option><option value="full">full resolution, 1.0 µm</option></select></label>
+      <label>Your capture distance: <span class="v" id="vG"></span><input autocomplete="off" type="range" id="gDist" min="8" max="60" step="1" value="30"></label>
+    </div>
+    <div class="gauge"><div class="track"><div class="safe" id="gSafe"></div><div class="knob" id="gKnob"></div></div><div class="scale"><span>8 cm</span><span>green = a screen photo would be caught</span><span>60 cm</span></div></div>
+    <div class="gauge-out" id="gOut"></div>
+    <div class="mc" id="p6"></div>
+  </div>
+  <div class="card"><canvas id="cvE5" class="chart"></canvas><div class="grid2" style="margin-top:10px"><div id="e5Table"></div><p class="small" id="e5Text"></p></div></div>
+  <div class="grid2">
+    <div class="card"><h3>E6 · Do phone-style sharpening and strong JPEG change the boundary?</h3><div id="e6Table"></div><p class="small" id="e6Text"></p></div>
+    <div class="card"><h3>Known and new</h3>
+      <ul class="tight small">
+        <li><b>Known:</b> recapture detection from moiré and aliasing (LCD); that LCD-trained detectors miss OLED; moiré depends on camera and display pixel pitch.</li>
+        <li><b>New here (to my knowledge):</b> a sampling-theory mechanism that can explain the OLED gap, tested with a same-<i>r</i> control in simulation; reading the screen layout from the moiré's reciprocal lattice; a capture-distance rule derived from the detection boundary. A literature search cannot prove nothing exists.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="warn"><b class="k">Limits (please read)</b>
+    <ul class="tight">
+      <li>The model is <b>simulated</b>: a screen model and a camera model I wrote. Lesson 7 checks it against real photos, but with one camera, two pictures and four photos per condition. Real phones also sharpen, denoise, merge frames (HDR) and use other OLED layouts.</li>
+      <li>Only two layouts are modelled (RGB stripes; diamond PenTile). Real OLED flicker banding is not modelled.</li>
+      <li>Pixel pitches, focal length and camera pixel size are <b>assumed typical values</b> (see Method), not measurements of a specific device.</li>
+      <li>The Python/JS demo differs in small ways (live demo: no noise, no JPEG, bilinear instead of cubic interpolation for the direct photo).</li>
+      <li>The classifiers are tiny (logistic regression on spectral features); the results are about <i>when information exists</i>, not about the best possible detector.</li>
+    </ul></div>
+  <div class="card"><h3>Method in brief</h3>
+    <ul class="tight small">
+      <li><b>Screen:</b> each pixel emits from small rectangles (subpixels). RGB stripes: three vertical bars with a dark bottom gap. PenTile: a green dot in every pixel, red and blue large dots alternating in a checkerboard.</li>
+      <li><b>Camera:</b> exact Gaussian blur of the emitted light (box ⊛ Gaussian = difference of normal CDFs), point sampling on a rotated lattice of pitch <i>r</i>, shared auto-exposure, shot and read noise, Bayer RGGB, bilinear demosaicing (a convolution), gamma, 8 bit, JPEG.</li>
+      <li><b>Feature ("peakiness"):</b> Hann-windowed 2-D FFT of the luma, log magnitude, subtract each radial ring's median (natural images are ~1/f), zero the low frequencies, the JPEG 8×8 grid and the Bayer frequencies, then average the 20 largest values.</li>
+      <li><b>Controlled pairs:</b> a photo of the screen and a direct photo of the same crop share the geometry, exposure, JPEG quality and blur; they differ only in the screen.</li>
+      <li><b>Assumed geometry:</b> laptop 0.179 mm pitch (15.6" FHD), monitor 0.277 mm (24" FHD), phone OLED 0.055 mm (~460 ppi); phone camera focal length 6 mm, pixel 2.0 µm (binned) or 1.0 µm (full).</li>
+      <li><b>Course ideas used:</b> Fourier series, sampling theorem and aliasing (Shah function), convolution theorem, Fourier transform of a Gaussian, 2-D Fourier transform, Bayer filter and demosaicing, JPEG, template matching, logistic regression.</li>
+    </ul>
+    <p class="small" style="margin-bottom:0">References: Trabelsi et al., recapture detection to fight deep identity theft (EURECOM); Thongkamwitoon, Muammar &amp; Dragotti, IEEE TIFS 2015; domain-generalised recapture identification (arXiv 2407.17170); Kodak Lossless True Colour Image Suite (source pictures).</p></div>
+</section>
+
+<!-- =============================================================== 7 -->
+<section class="chapter" id="ch7">
+  <div class="banner"><span class="num">7</span><div><span class="kick">Lesson 7 · Check it against reality</span><h2>Real photos</h2></div></div>
+  <p class="lead">Lessons 1 to 6 came from a simulated screen and camera. Here I check them against <b>34 real photos</b> taken with a Motorola Edge 50 Fusion of two screens: an HP Victus laptop (15.6" FHD, 141 ppi) and a Moto G32 phone (6.5", about 405 ppi). <b>Both are LCDs, so this tests pixel size, not OLED.</b></p>
+  <div class="grid3" id="realCards"></div>
+
+  <div class="card">
+    <h3>Explore the real photos</h3>
+    <div class="controls">
+      <label>Screen <select autocomplete="off" id="rDev"></select></label>
+      <label>Distance: <span class="v" id="vRD"></span> <select autocomplete="off" id="rDist"></select></label>
+    </div>
+    <div class="figrow" id="rFig" style="max-width:760px"></div>
+    <div class="readout card" id="rRead" style="margin-top:12px"></div>
+    <div class="try"><b class="k">Try this</b>Pick the laptop at 12 cm: the photo shows the pixel grid and the spectrum has isolated bright spots. Move to 35 cm, then switch to the Moto G32: the spectrum looks like an ordinary photo's.</div>
+  </div>
+
+  <div class="card"><h3>Real photos on the simulation's curve</h3><canvas id="cvReal" class="chart"></canvas><p class="small" id="rChartText"></p></div>
+
+  <div class="card"><h3>All seven conditions</h3><div id="rTable"></div>
+    <ul class="tight small" style="margin-top:10px">
+      <li><b>Step 1, calibrate:</b> at 12 and 20 cm the laptop's lattice is resolved. A template fit (known layout, free r and angle) gives r of about 0.28 and 0.48. Their ratio (1.71) matches the thin-lens ratio (1.70), and both give the same effective camera pixel, 2.45 and 2.47 µm.</li>
+      <li><b>Step 2, predict:</b> r = pixel × (d − f) / (pitch × f) for the other five conditions, using the real pixel pitches and distances.</li>
+      <li><b>Step 3, compare:</b> where those r values fall on the simulation's curve.</li>
+    </ul></div>
+
+  <div class="warn"><b class="k">Limits (please read)</b>
+    <ul class="tight">
+      <li>One camera, two pictures, four photos per condition, no confidence intervals. The result is <b>consistent with the simulation</b>, not a proof.</li>
+      <li>Distances were set with a string (about ±1 cm); pixel pitches come from spec sheets. The ordinary photos show different content (a chair, tiles) from the screen photos.</li>
+      <li>HDR was not switched off. The trained detector's probability is <b>not reliable on real photos</b> (ordinary photos get about 0.56), so only peakiness and spectra are shown here.</li>
+      <li>Nothing was retuned to fit these photos. Only the displayed picture's region was analysed, never the originals' EXIF or location; the original photos are not part of this site.</li>
+    </ul></div>
+</section>
+</main>
+<footer>
+  <span>DA3021 final project. All numbers on this page are read from <code>data/data.js</code> (<code>precompute.py</code>) and <code>data/real.js</code> (<code>export_real_site.py</code>). <span id="runInfo"></span></span>
+  <button id="resetBtn">Start over</button>
+</footer>
+
+<div class="fbar" id="fbar" role="status" aria-live="polite">
+  <div class="fb-in"><div class="fb-mascot mascot" id="fbMascot"></div><div class="fb-txt"><b id="fbT"></b><span id="fbB"></span></div><button class="btn big" id="fbBtn">Continue</button></div>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script src="data/data.js"></script>
+<script src="data/real.js"></script>
+<script src="js/fft.js"></script>
+<script src="js/theory.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/play.js"></script>
+<script src="js/main.js"></script>
+<script src="js/real.js"></script>
+</body>
+</html>

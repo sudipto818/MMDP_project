@@ -1,0 +1,12 @@
+__pycache__/
+.pytest_cache/
+logs/
+*.pyc
+# Kodak images are downloaded by get_data.py
+data/kodak/
+# original photos (private); keep roi_overrides.csv and README only
+data/real/*/
+data/real/*.jpg
+# screenshots of device settings (contain device IDs)
+data/*.png
+slides/preview/
